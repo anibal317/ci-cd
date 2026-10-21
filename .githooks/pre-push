@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+#
+# Hook pre-push de git.
+#
+# Git ejecuta este archivo ANTES de subir los commits. Si sale con un código
+# distinto de 0, git ABORTA el push.
+#
+# Instalación (una sola vez por clon):
+#     npm run hooks:install
+# Eso apunta core.hooksPath a esta carpeta, así el hook queda versionado en el
+# repo y les llega a todos. (Un .git/hooks/pre-push normal NO se versiona.)
+#
+# Para saltearlo:  git push --no-verify
+# Por eso el hook es COMODIDAD, no garantía. La garantía es el CI
+# + branch protection, que no se pueden saltear.
+
+# Git puede llamar al hook desde un subdirectorio: nos paramos en la raíz del repo.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+echo "==> pre-push: corriendo las verificaciones antes de subir..."
+
+if npm test --silent; then
+  echo "==> pre-push: todo OK. Sigo con el push."
+  exit 0
+fi
+
+echo ""
+echo "-------------------------------------------------------------"
+echo " PUSH CANCELADO: las verificaciones fallaron."
+echo " Arreglá lo que falló y volvé a intentar."
+echo " (Para saltearlo igual: git push --no-verify)"
+echo "-------------------------------------------------------------"
+exit 1

@@ -6,6 +6,8 @@
   "description": "Demo mínima de CI/CD con GitHub Actions y GitHub Pages",
   "scripts": {
     "test": "node check.mjs",
-    "preview": "npx --yes serve public"
+    "preview": "npx --yes serve public",
+    "hooks:install": "git config core.hooksPath .githooks",
+    "prepare": "npm run hooks:install || true"
   }
 }
