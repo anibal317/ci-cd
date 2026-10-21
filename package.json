@@ -1,0 +1,11 @@
+{
+  "name": "ci-cd-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Demo mínima de CI/CD con GitHub Actions y GitHub Pages",
+  "scripts": {
+    "test": "node check.mjs",
+    "preview": "npx --yes serve public"
+  }
+}

@@ -1,0 +1,72 @@
+# Nombre del workflow (se ve en la pestaña Actions).
+name: CD
+
+# Se dispara SOLO cuando el push llega a main.
+# Los pull request no publican: primero se revisa, después se publica.
+on:
+  push:
+    branches: [main]
+
+# Permisos del token automático del workflow. Por defecto es de solo lectura;
+# acá hay que abrirlos para poder publicar.
+permissions:
+  contents: read    # leer el código del repo
+  pages: write      # publicar en GitHub Pages
+  id-token: write   # permite que el deploy pruebe de dónde viene (requisito de Pages)
+
+# Evita dos deploys a la vez. Si llega un push nuevo mientras uno corre,
+# cancela el viejo y publica el nuevo (si no, se pisan).
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # id del job, inventado por nosotros.
+  deploy:
+    runs-on: ubuntu-latest
+
+    # El "environment" es un entorno de deploy con nombre.
+    # "github-pages" lo crea GitHub solo cuando activás Pages en el repo.
+    # Sirve para reglas de protección y para ver la URL en el grafo del workflow.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}   # la URL que devuelve el paso de abajo
+
+    steps:
+      # Trae el código del repo a la VM.
+      - name: Traer el código
+        uses: actions/checkout@v7
+
+      # Instala Node en la VM.
+      - name: Preparar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # Instalación limpia leyendo el lock file.
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Verificamos ANTES de publicar. Si la página está rota, el deploy falla
+      # acá y no se publica nada roto. Por eso el CD se cuida solo.
+      - name: Verificar antes de publicar
+        run: npm test
+
+      # Lee la config de Pages del repo y prepara el entorno de deploy.
+      - name: Configurar Pages
+        uses: actions/configure-pages@v6
+
+      # Empaqueta la carpeta como artefacto y la sube al run.
+      # path: public = solo el sitio. Con "path: ." se publicarían también
+      # los .yml de los workflows y el .git, que no tienen nada que hacer ahí.
+      - name: Empaquetar el sitio
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+      # Toma ese artefacto y lo publica en Pages.
+      # id: deployment es para poder leer su output (page_url) desde el environment, arriba.
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v5

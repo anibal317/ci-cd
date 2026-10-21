@@ -1,0 +1,35 @@
+# Nombre del workflow. Es lo que ves en la pestaña Actions y en el badge del README.
+name: CI
+
+# Cuándo se dispara: en cada push a cualquier rama, y en cada pull request.
+on: [push, pull_request]
+
+# Un workflow tiene uno o más jobs. Cada job corre en su propia máquina virtual,
+# en paralelo con los demás.
+jobs:
+  # "test" es el id del job. Lo inventamos nosotros, no es palabra reservada.
+  test:
+    # La máquina donde corre: una VM Linux limpia y descartable, que se borra al terminar.
+    runs-on: ubuntu-latest
+
+    # Los pasos, en orden. Si uno falla, los siguientes no corren y el job queda rojo.
+    steps:
+      # Trae el código del repo a la VM. Casi siempre es el primer paso.
+      - name: Traer el código
+        uses: actions/checkout@v7
+
+      # Instala Node en la VM y lo deja disponible en el PATH.
+      - name: Preparar Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22   # qué versión de Node instalar
+          cache: npm         # cachea ~/.npm entre corridas -> instala mucho más rápido
+
+      # npm ci = instalación limpia y reproducible, leyendo package-lock.json.
+      # Falla si el lock no coincide con package.json. En CI se usa ci, no install.
+      - name: Instalar dependencias
+        run: npm ci
+
+      # El chequeo de verdad. Si sale con código 1, el job se pinta de rojo.
+      - name: Verificar la página
+        run: npm test
