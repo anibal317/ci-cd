@@ -21,9 +21,11 @@ public/index.html                  estructura de la página (solo HTML)
 public/styles.css                  los estilos
 public/app.js                      el JS (ahí está la constante VERSION)
 check.mjs                          la verificación (sin dependencias, se lee entera)
-package.json                       script `npm test` -> corre check.mjs
+package.json                       scripts: test, preview, hooks:install
+.githooks/pre-push                 hook local: corre los tests antes de cada push
 .github/workflows/ci.yml           CI: verifica en cada push y cada PR
 .github/workflows/cd.yml           CD: verifica y publica en Pages (solo en main)
+PROTECCION-MAIN.md                 las reglas de protección de main
 ```
 
 ## Correrlo local
@@ -49,9 +51,10 @@ Arreglalo, cambiá el `v1` por `v2`, push a `main`. Andá a la URL publicada:
 la página ya cambió sola. Nadie copió archivos por FTP.
 
 **Momento 4 — el por qué.**
-Activá branch protection en `main` pidiendo que CI pase
-(Settings → Branches → Add rule). Ahora un PR con CI rojo **no se puede mergear**.
-Ese es el motivo real del CI, no la sintaxis del YAML.
+`main` ya está protegida: no acepta push directo y el merge está bloqueado
+mientras el check `test` esté rojo. Ese es el motivo real del CI, no la sintaxis
+del YAML. Ver **[PROTECCION-MAIN.md](PROTECCION-MAIN.md)** para el detalle y para
+recrearlo a mano en clase.
 
 ## Cosas que suelen salir mal
 
